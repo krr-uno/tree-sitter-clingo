@@ -357,7 +357,8 @@ def convert_statement(lib: Library, src: bytes, node):
 
 # ---------------------------------- driver ------------------------------------
 
-def parse_to_clingo_ast(lib: Library, src: bytes, lang: Language):
+def parse_to_clingo_ast(src: bytes, lang: Language):
+    lib = Library()
     parser = Parser(lang)  # TS 0.23.6
     tree = parser.parse(src)
     root = tree.root_node
@@ -387,8 +388,7 @@ def main():
     lang = load_ts_language(args.module, args.so)
     src_bytes = args.text.encode() if args.text is not None else args.file.read_bytes()
 
-    lib = Library()
-    ast_list = parse_to_clingo_ast(lib, src_bytes, lang)
+    ast_list = parse_to_clingo_ast(src_bytes, lang)
     for i, stm in enumerate(ast_list, 1):
         print(f"% ---- statement {i} ----")
         print(stm)
