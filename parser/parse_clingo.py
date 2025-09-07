@@ -6,7 +6,6 @@ PY_LANGUAGE = Language(tspython.language())
 parser = Parser(PY_LANGUAGE)
 
 source = bytes("""\
-p(1).
 q(X) :- p(X), not r(X).
 """, "utf-8")
 
