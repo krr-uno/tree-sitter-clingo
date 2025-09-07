@@ -30,9 +30,13 @@ class TestParser(unittest.TestCase):
         """
         self.assertParserOutput(program)
 
-    # def test_empty_program(self):
-    #     program = ""
-    #     self.assertParserOutput(program)
+    def test_aggregate(self):
+        program = """
+        p(1).
+        q(X) :- X = #sum{ Y : p(Y) }.
+        """
+        self.assertParserOutput(program)
+
         
 if __name__ == "__main__":
     unittest.main()

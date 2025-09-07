@@ -12,7 +12,7 @@ Requires:
 """
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import List, Optional, Iterable
 import argparse
 import ctypes
 import importlib
@@ -291,6 +291,102 @@ def convert_conditional_literal_head(lib: Library, src: bytes, node):
                     cond.append(ast.HeadSimpleLiteral(lib, literal=convert_literal(lib, src, g)))
     return ast.HeadConditionalLiteral(lib, location=loc, literal=base, condition=cond)
 
+# --------------------------- body literal helpers (new) ------------------------
+
+def _extract_body_item(lib: Library, src: bytes, node):
+    """
+    Convert a node that *represents* one body item into either:
+      - ast.BodySimpleLiteral
+      - ast.BodyConditionalLiteral
+    Returns None for not-yet-implemented kinds (aggregates/theory).
+    """
+    # direct conditional_literal?
+    if node.type == "conditional_literal":
+        return convert_conditional_literal_body(lib, src, node)
+
+    # body_literal (sign? ( aggregate | theory_atom | _simple_atom ))
+    if node.type == "body_literal":
+        # If grammar aliases conditional literal via body_literal: handle it
+        for ch in named(node):
+            if ch.type == "conditional_literal":
+                return convert_conditional_literal_body(lib, src, ch)
+
+        # sign + _simple_atom (symbolic/comparison/boolean)
+        si = next((ch for ch in named(node) if ch.type in ("sign","default_negation")), None)
+        sign = sign_from(si)
+        inner = None
+        # shallow scan for simple atom nodes
+        for ch in named(node):
+            if ch.type in ("symbolic_atom","comparison","boolean_constant"):
+                inner = ch
+                break
+        # fallback: one more level (because of _simple_atom wrappers)
+        if inner is None:
+            for ch in named(node):
+                for g in named(ch):
+                    if g.type in ("symbolic_atom","comparison","boolean_constant"):
+                        inner = g
+                        break
+                if inner is not None:
+                    break
+        if inner is not None:
+            lit = convert_simple_literal(lib, src, inner, sign, ts_loc(lib, node))
+            return ast.BodySimpleLiteral(lib, literal=lit)
+
+        # TODO: set_aggregate/body_aggregate/theory_atom support can be added here.
+
+    # wrappers: descend
+    for ch in named(node):
+        x = _extract_body_item(lib, src, ch)
+        if x is not None:
+            return x
+    return None
+
+def _walk_body_tokens(node) -> Iterable:
+    """
+    Yield nodes in body *in source order* that matter to us:
+      - 'body_literal' or 'conditional_literal' => one body item
+      - ';', ',', '.' punctuation to split/terminate
+    We recurse into unnamed wrapper nodes to flatten the stream.
+    """
+    for ch in node.children:
+        if ch.type in ("body_literal", "conditional_literal", ";", ",", "."):
+            yield ch
+            if ch.type in ("body_literal", "conditional_literal"):
+                # Don't recurse into this item or we'll duplicate it.
+                continue
+        yield from _walk_body_tokens(ch)
+
+def split_body_into_groups(lib: Library, src: bytes, body_node) -> List[List[ast.BodySimpleLiteral | ast.BodyConditionalLiteral]]:
+    """
+    Parse a body into groups of conjunctions split by ';'.
+    ',' keeps accumulating into the current group.
+    '.' terminates parsing.
+    """
+    groups: List[List[ast.BodySimpleLiteral | ast.BodyConditionalLiteral]] = []
+    cur: List[ast.BodySimpleLiteral | ast.BodyConditionalLiteral] = []
+
+    for tok in _walk_body_tokens(body_node):
+        ty = tok.type
+        if ty in ("body_literal", "conditional_literal"):
+            item = _extract_body_item(lib, src, tok)
+            if item is not None:
+                cur.append(item)
+        elif ty == ",":
+            # conjunction → keep accumulating
+            pass
+        elif ty == ";":
+            # disjunction → finish current group
+            if cur:
+                groups.append(cur)
+            cur = []
+        elif ty == ".":
+            break
+
+    if cur:
+        groups.append(cur)
+    return groups
+
 # ------------------------------ head / body / stmts ---------------------------
 
 def convert_head(lib: Library, src: bytes, node):
@@ -315,44 +411,56 @@ def convert_disjunction_head(lib: Library, src: bytes, node):
             elems.append(ast.HeadSimpleLiteral(lib, literal=convert_literal(lib, src, ch)))
     return ast.HeadDisjunction(lib, location=loc, elements=elems)
 
-def convert_body(lib: Library, src: bytes, node) -> List[ast.BodySimpleLiteral | ast.BodyConditionalLiteral]:
-    items: List[ast.BodySimpleLiteral | ast.BodyConditionalLiteral] = []
-    for ch in named(node):
-        if ch.type in ("body_literal", "_body_literal"):
-            sub = next((g for g in named(ch) if g.type in ("literal","conditional_literal")), None)
-            if sub is None:
-                continue
-            if sub.type == "literal":
-                items.append(ast.BodySimpleLiteral(lib, literal=convert_literal(lib, src, sub)))
-            else:
-                items.append(convert_conditional_literal_body(lib, src, sub))
-        elif ch.type == "literal":
-            items.append(ast.BodySimpleLiteral(lib, literal=convert_literal(lib, src, ch)))
-        elif ch.type == "conditional_literal":
-            items.append(convert_conditional_literal_body(lib, src, ch))
-    return items
-
 def convert_statement(lib: Library, src: bytes, node):
+    """
+    Returns either:
+      - ast.StatementRule
+      - list[ast.StatementRule]  (if ';' produced multiple alternative bodies)
+      - None
+    """
     t = node.type
     loc = ts_loc(lib, node)
+
     if t == "rule":
-        head = None
-        body: List[ast.BodySimpleLiteral | ast.BodyConditionalLiteral] = []
-        for ch in named(node):
-            if ch.type == "head":
-                head = convert_head(lib, src, ch)
-            elif ch.type == "body":
-                body = convert_body(lib, src, ch)
-        if head is None:
-            head = ast.HeadDisjunction(lib, location=loc, elements=[])
-        return ast.StatementRule(lib, location=loc, head=head, body=body)
-    if t == "integrity_constraint":
-        body = []
-        for ch in named(node):
-            if ch.type == "body":
-                body = convert_body(lib, src, ch)
+        head_node = next((ch for ch in named(node) if ch.type == "head"), None)
+        body_node = next((ch for ch in named(node) if ch.type == "body"), None)
+
         head = ast.HeadDisjunction(lib, location=loc, elements=[])
-        return ast.StatementRule(lib, location=loc, head=head, body=body)
+        if head_node is not None:
+            head = convert_head(lib, src, head_node)
+
+        # No body → single rule with empty body
+        if body_node is None:
+            return ast.StatementRule(lib, location=loc, head=head, body=[])
+
+        groups = split_body_into_groups(lib, src, body_node)
+        if not groups:
+            # treat as empty body if nothing recognized
+            return ast.StatementRule(lib, location=loc, head=head, body=[])
+
+        if len(groups) == 1:
+            return ast.StatementRule(lib, location=loc, head=head, body=groups[0])
+
+        # Multiple groups because of ';' → expand to multiple rules.
+        out = []
+        for g in groups:
+            out.append(ast.StatementRule(lib, location=loc, head=head, body=g))
+        return out
+
+    if t == "integrity_constraint":
+        body_node = next((ch for ch in named(node) if ch.type == "body"), None)
+        head = ast.HeadDisjunction(lib, location=loc, elements=[])
+        if body_node is None:
+            return ast.StatementRule(lib, location=loc, head=head, body=[])
+        groups = split_body_into_groups(lib, src, body_node)
+        if len(groups) <= 1:
+            return ast.StatementRule(lib, location=loc, head=head, body=(groups[0] if groups else []))
+        out = []
+        for g in groups:
+            out.append(ast.StatementRule(lib, location=loc, head=head, body=g))
+        return out
+
+    # other statements not implemented here
     return None
 
 # ---------------------------------- driver ------------------------------------
@@ -366,13 +474,21 @@ def parse_to_clingo_ast(lib: Library, src: bytes, lang: Language):
     for st in named(root):
         if st.type == "statement":
             for ch in named(st):
-                stmt = convert_statement(lib, src, ch)
-                if stmt is not None:
-                    out.append(stmt)
+                res = convert_statement(lib, src, ch)
+                if res is None:
+                    continue
+                if isinstance(res, list):
+                    out.extend(res)
+                else:
+                    out.append(res)
         elif st.type in ("rule", "integrity_constraint"):
-            stmt = convert_statement(lib, src, st)
-            if stmt is not None:
-                out.append(stmt)
+            res = convert_statement(lib, src, st)
+            if res is None:
+                continue
+            if isinstance(res, list):
+                out.extend(res)
+            else:
+                out.append(res)
     return out
 
 def main():
