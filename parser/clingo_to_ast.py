@@ -269,11 +269,11 @@ def convert_literal(lib: Library, src: bytes, node):
 # ------------------------------- aggregates (NEW) ------------------------------
 
 def _parse_lower_guard(lib: Library, src: bytes, lower_node) -> Optional[ast.LeftGuard]:
-    # lower := term [relation]
+    # node-types: lower has children: relation, term (both required)
     if lower_node is None:
         return None
-    tnode = field(lower_node, "term") or next((c for c in named(lower_node) if c.type == "term"), None)
-    rnode = field(lower_node, "relation") or next((c for c in named(lower_node) if c.type in REL), None)
+    tnode = next((c for c in named(lower_node) if c.type == "term"), None)
+    rnode = next((c for c in named(lower_node) if c.type == "relation"), None)
     if tnode is None or rnode is None:
         return None
     rel = REL[text(src, rnode)]
@@ -281,59 +281,54 @@ def _parse_lower_guard(lib: Library, src: bytes, lower_node) -> Optional[ast.Lef
     return ast.LeftGuard(lib, relation=rel, term=term)
 
 def _parse_upper_guard(lib: Library, src: bytes, upper_node) -> Optional[ast.RightGuard]:
-    # upper := [relation] term
+    # node-types: upper has children: relation, term (both required)
     if upper_node is None:
         return None
-    rnode = field(upper_node, "relation") or next((c for c in named(upper_node) if c.type in REL), None)
-    tnode = field(upper_node, "term") or next((c for c in named(upper_node) if c.type == "term"), None)
+    rnode = next((c for c in named(upper_node) if c.type == "relation"), None)
+    tnode = next((c for c in named(upper_node) if c.type == "term"), None)
     if tnode is None or rnode is None:
         return None
     rel = REL[text(src, rnode)]
     term = convert_term(lib, src, tnode)
     return ast.RightGuard(lib, relation=rel, term=term)
 
-def _parse_condition_as_body_literals(lib: Library, src: bytes, cond_node) -> List[ast.BodySimpleLiteral]:
-    # _condition := ":" [literal_tuple]
-    if cond_node is None:
-        return []
-    lits: List[ast.BodySimpleLiteral] = []
-    tup = next((c for c in named(cond_node) if c.type == "literal_tuple"), None)
+def _parse_condition_literals_from_element(lib: Library, src: bytes, el_node) -> List[ast.Literal]:
+    """Collect condition literals (as clingo.ast.Literal) from a body_aggregate_element.
+    node-types marks ':' and literal_tuple as field 'condition'. We just need the literal_tuple."""
+    tup = next((c for c in named(el_node) if c.type == "literal_tuple"), None)
     if tup is None:
-        return lits
+        return []
+    lits: List[ast.Literal] = []
     for lit in named(tup):
         if lit.type == "literal":
-            lits.append(ast.BodySimpleLiteral(lib, literal=convert_literal(lib, src, lit)))
+            lits.append(convert_literal(lib, src, lit))
     return lits
 
 def convert_body_aggregate(lib: Library, src: bytes, node, sign: ast.Sign) -> ast.BodyAggregate:
-    # body_aggregate := [lower] ( #fun "{" [elements] "}" ) [upper]
+    # body_aggregate has direct children: [lower] aggregate_function [body_aggregate_elements] [upper]
     loc = ts_loc(lib, node)
     lower = next((c for c in named(node) if c.type == "lower"), None)
     upper = next((c for c in named(node) if c.type == "upper"), None)
-    core  = next((c for c in named(node) if c.type == "_body_aggregate"), None)
-    if core is None:
-        raise ValueError("malformed body_aggregate: missing core")
-
-    fn_tok = field(core, "aggregate_function") or next((c for c in named(core) if c.type == "aggregate_function"), None)
+    fn_tok = next((c for c in named(node) if c.type == "aggregate_function"), None)
+    if fn_tok is None:
+        raise ValueError("malformed body_aggregate: missing aggregate_function")
     fun = AGGFN[text(src, fn_tok)]
 
     elements: List[ast.BodyAggregateElement] = []
-    elems_parent = next((c for c in named(core) if c.type == "body_aggregate_elements"), None)
+    elems_parent = next((c for c in named(node) if c.type == "body_aggregate_elements"), None)
     if elems_parent is not None:
         for el in named(elems_parent):
             if el.type != "body_aggregate_element":
                 continue
             el_loc = ts_loc(lib, el)
-            # either: (terms) [:_cond]   OR   :_cond
-            tnode = field(el, "tuple")
-            cnode = field(el, "condition")
-            cond = _parse_condition_as_body_literals(lib, src, cnode)
-            if tnode is not None:
-                # tnode is "terms" -> collect term children
-                terms = [convert_term(lib, src, t) for t in named(tnode) if t.type == "term"]
-                tup = ast.ArgumentTuple(lib, arguments=terms)
+            # tuple terms
+            terms_node = next((c for c in named(el) if c.type == "terms"), None)
+            if terms_node is not None:
+                terms = [convert_term(lib, src, t) for t in named(terms_node) if t.type == "term"]
             else:
-                tup = ast.ArgumentTuple(lib, arguments=[])
+                terms = []
+            tup = terms  # BodyAggregateElement expects Iterable[Term]
+            cond = _parse_condition_literals_from_element(lib, src, el)
             elements.append(ast.BodyAggregateElement(lib, location=el_loc, tuple=tup, condition=cond))
 
     left  = _parse_lower_guard(lib, src, lower)
