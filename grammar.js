@@ -538,7 +538,7 @@ module.exports = grammar({
         theory: $ => seq("#theory", $.identifier, "{", optional($._theory_definitions), "}", "."),
 
         aggregate_assignment_aggregate: $ => seq($.aggregate_function, "{", optional($.body_aggregate_elements), "}"),
-        choice_assignment_aggregate: $ => seq("{", optional($.body_aggregate_elements), "}"),
+        choice_assignment_aggregate: $ => seq("{", $.body_aggregate_elements, "}"),
 
         simple_assignment: $ => seq($.term, ":=", $.term),
         aggregate_assignment: $ => seq($.term, ":=", $.aggregate_assignment_aggregate),

@@ -4419,16 +4419,8 @@
           "value": "{"
         },
         {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "SYMBOL",
-              "name": "body_aggregate_elements"
-            },
-            {
-              "type": "BLANK"
-            }
-          ]
+          "type": "SYMBOL",
+          "name": "body_aggregate_elements"
         },
         {
           "type": "STRING",
