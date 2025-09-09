@@ -537,6 +537,17 @@ module.exports = grammar({
 
         theory: $ => seq("#theory", $.identifier, "{", optional($._theory_definitions), "}", "."),
 
+        aggregate_assignment_aggregate: $ => seq($.aggregate_function, "{", optional($.body_aggregate_elements), "}"),
+        choice_assignment_aggregate: $ => seq("{", optional($.body_aggregate_elements), "}"),
+
+        simple_assignment: $ => seq($.term, ":=", $.term),
+        aggregate_assignment: $ => seq($.term, ":=", $.aggregate_assignment_aggregate),
+        choice_assignment: $ => seq($.term, "in", $.choice_assignment_aggregate),
+
+        _head_assignment: $ => choice($.simple_assignment, $.aggregate_assignment, $.choice_assignment),
+
+        assignment_rule: $ => seq($._head_assignment, choice(".", seq(":-", $.body))),
+
         statement: $ => choice(
             $.rule,
             $.integrity_constraint,
@@ -556,7 +567,8 @@ module.exports = grammar({
             $.include,
             $.program,
             $.external,
-            $.theory
+            $.theory,
+            $.assignment_rule,
         ),
     }
 });

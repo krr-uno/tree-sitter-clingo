@@ -9,6 +9,10 @@ Build a clingo 6 AST from a Clingo source string using Tree-Sitter 0.23.6.
 
 Requires:
   pip install tree_sitter==0.23.6 clingo
+
+Grammar source:
+  - Option A: Python package `tree_sitter_clingo` exposing language()
+  - Option B: compiled shared library exporting `tree_sitter_clingo()`
 """
 from __future__ import annotations
 
@@ -24,6 +28,7 @@ from tree_sitter import Language, Parser
 from clingo.core import Location, Position, Library
 from clingo import ast
 from clingo.symbol import Number, String as SymString, Infimum, Supremum
+
 
 # --------------------------- language loader (TS 0.23.6) ----------------------
 
@@ -43,12 +48,13 @@ def load_ts_language(module: Optional[str], so_path: Optional[Path]) -> Language
         return Language(ptr)
     raise SystemExit("Provide --module tree_sitter_clingo OR --so ./parser.(so|dylib|dll)")
 
+
 # ---------------------------------- helpers -----------------------------------
 
 FILENAME = "<ts>"
 
 def ts_loc(lib: Library, node) -> Location:
-    # Tree-Sitter is 0-based; clingo positions are 1-based
+    # Tree-Sitter is 0-based; clingo positions are 1-based.
     sr, sc = node.start_point
     er, ec = node.end_point
     return Location(
@@ -65,6 +71,7 @@ def named(node):
 def field(node, name: str):
     return node.child_by_field_name(name)
 
+
 # ----------------------------- operator mappings ------------------------------
 
 BINOP = {
@@ -77,7 +84,7 @@ BINOP = {
     "&":  ast.BinaryOperator.And,
     "^":  ast.BinaryOperator.Xor,
     "|":  ast.BinaryOperator.Or,
-    "?":  ast.BinaryOperator.Or,  # some grammars tokenise bitwise OR as '?'
+    "?":  ast.BinaryOperator.Or,  # grammar may use '?' as bitwise OR token
 }
 
 REL = {
@@ -99,6 +106,7 @@ def sign_from(node_opt) -> ast.Sign:
         return ast.Sign.Double if n >= 2 else (ast.Sign.Single if n == 1 else ast.Sign.NoSign)
     return ast.Sign.NoSign
 
+
 # ------------------------------ term conversion -------------------------------
 
 def convert_term(lib: Library, src: bytes, node) -> ast.Term:
@@ -111,20 +119,18 @@ def convert_term(lib: Library, src: bytes, node) -> ast.Term:
         elif raw.startswith(("0o","0O")): val = int(raw, 8)
         elif raw.startswith(("0b","0B")): val = int(raw, 2)
         else:                              val = int(raw)
-        # clingo 6: Number(lib, int)
-        return ast.TermSymbolic(lib, location=loc, symbol=Number(lib, val))
+        return ast.TermSymbolic(lib, location=loc, symbol=Number(val))
 
     if t == "string":
         s = text(src, node)
         if len(s) >= 2 and s[0] == s[-1] == '"':
             s = s[1:-1]
-        # clingo 6: String(lib, text)
-        return ast.TermSymbolic(lib, location=loc, symbol=SymString(lib, s))
+        return ast.TermSymbolic(lib, location=loc, symbol=SymString(s))
 
     if t == "infimum":
-        return ast.TermSymbolic(lib, location=loc, symbol=Infimum(lib))
+        return ast.TermSymbolic(lib, location=loc, symbol=Infimum)
     if t == "supremum":
-        return ast.TermSymbolic(lib, location=loc, symbol=Supremum(lib))
+        return ast.TermSymbolic(lib, location=loc, symbol=Supremum)
 
     if t in ("anonymous", "variable"):
         name = "_" if t == "anonymous" else text(src, node)
@@ -191,6 +197,7 @@ def convert_term(lib: Library, src: bytes, node) -> ast.Term:
 
     raise ValueError(f"Unhandled term node: {t}")
 
+
 def collect_pool_groups(lib: Library, src: bytes, pool_node) -> List[List[ast.Term]]:
     groups: List[List[ast.Term]] = []
     for ch in named(pool_node):
@@ -204,8 +211,9 @@ def collect_pool_groups(lib: Library, src: bytes, pool_node) -> List[List[ast.Te
                 groups.append(tms[i:i+2])
     return groups
 
+
 def convert_arg_pool(lib: Library, src: bytes, pool_node) -> List[ast.ArgumentTuple]:
-    """Function/external-function arguments: return list of ArgumentTuple (no location parameter in clingo 6)."""
+    """Function/external function arguments: return list of ArgumentTuple (no location parameter in clingo 6)."""
     if pool_node is None:
         return []
     groups = collect_pool_groups(lib, src, pool_node)
@@ -214,6 +222,7 @@ def convert_arg_pool(lib: Library, src: bytes, pool_node) -> List[ast.ArgumentTu
         out.append(ast.ArgumentTuple(lib, arguments=args))
     return out
 
+
 # --------------------------- atoms & (simple) literals -------------------------
 
 def term_for_symbolic_atom(lib: Library, src: bytes, node) -> ast.Term:
@@ -221,6 +230,7 @@ def term_for_symbolic_atom(lib: Library, src: bytes, node) -> ast.Term:
     pool = field(node, "pool")
     args = convert_arg_pool(lib, src, pool) if pool is not None else []
     return ast.TermFunction(lib, location=ts_loc(lib, node), name=text(src, nm), pool=args, external=False)
+
 
 def convert_comparison_literal(lib: Library, src: bytes, node, sign: ast.Sign, loc: Location) -> ast.LiteralComparison:
     kids = named(node)
@@ -237,6 +247,7 @@ def convert_comparison_literal(lib: Library, src: bytes, node, sign: ast.Sign, l
         i += 2
     return ast.LiteralComparison(lib, location=loc, sign=sign, left=left, right=rights)
 
+
 def convert_simple_literal(lib: Library, src: bytes, node, sign: ast.Sign, loc: Location):
     t = node.type
     if t == "symbolic_atom":
@@ -247,11 +258,13 @@ def convert_simple_literal(lib: Library, src: bytes, node, sign: ast.Sign, loc: 
     if t == "boolean_constant":
         val = text(src, node) == "#true"
         return ast.LiteralBoolean(lib, location=loc, sign=sign, value=val)
+
     # wrappers
     for ch in named(node):
         if ch.type in ("symbolic_atom","comparison","boolean_constant"):
             return convert_simple_literal(lib, src, ch, sign, loc)
     raise ValueError(f"Unhandled simple atom: {t}")
+
 
 def convert_literal(lib: Library, src: bytes, node):
     kids = named(node)
@@ -261,6 +274,7 @@ def convert_literal(lib: Library, src: bytes, node):
         raise ValueError("literal without atom")
     sign = sign_from(si_node)
     return convert_simple_literal(lib, src, atom_node, sign, ts_loc(lib, node))
+
 
 def convert_conditional_literal_body(lib: Library, src: bytes, node):
     """BodyConditionalLiteral: literal : condition."""
@@ -277,6 +291,7 @@ def convert_conditional_literal_body(lib: Library, src: bytes, node):
                     cond.append(ast.BodySimpleLiteral(lib, literal=convert_literal(lib, src, g)))
     return ast.BodyConditionalLiteral(lib, location=loc, literal=base, condition=cond)
 
+
 def convert_conditional_literal_head(lib: Library, src: bytes, node):
     loc = ts_loc(lib, node)
     lits = [ch for ch in named(node) if ch.type == "literal"]
@@ -290,6 +305,7 @@ def convert_conditional_literal_head(lib: Library, src: bytes, node):
                 if g.type == "literal":
                     cond.append(ast.HeadSimpleLiteral(lib, literal=convert_literal(lib, src, g)))
     return ast.HeadConditionalLiteral(lib, location=loc, literal=base, condition=cond)
+
 
 # ------------------------------ head / body / stmts ---------------------------
 
@@ -305,6 +321,7 @@ def convert_head(lib: Library, src: bytes, node):
         return convert_disjunction_head(lib, src, node)
     return ast.HeadDisjunction(lib, location=ts_loc(lib, node), elements=[])
 
+
 def convert_disjunction_head(lib: Library, src: bytes, node):
     loc = ts_loc(lib, node)
     elems = []
@@ -314,6 +331,7 @@ def convert_disjunction_head(lib: Library, src: bytes, node):
         elif ch.type == "literal":
             elems.append(ast.HeadSimpleLiteral(lib, literal=convert_literal(lib, src, ch)))
     return ast.HeadDisjunction(lib, location=loc, elements=elems)
+
 
 def convert_body(lib: Library, src: bytes, node) -> List[ast.BodySimpleLiteral | ast.BodyConditionalLiteral]:
     items: List[ast.BodySimpleLiteral | ast.BodyConditionalLiteral] = []
@@ -331,6 +349,7 @@ def convert_body(lib: Library, src: bytes, node) -> List[ast.BodySimpleLiteral |
         elif ch.type == "conditional_literal":
             items.append(convert_conditional_literal_body(lib, src, ch))
     return items
+
 
 def convert_statement(lib: Library, src: bytes, node):
     t = node.type
@@ -355,6 +374,7 @@ def convert_statement(lib: Library, src: bytes, node):
         return ast.StatementRule(lib, location=loc, head=head, body=body)
     return None
 
+
 # ---------------------------------- driver ------------------------------------
 
 def parse_to_clingo_ast(src: bytes, lang: Language):
@@ -376,6 +396,7 @@ def parse_to_clingo_ast(src: bytes, lang: Language):
                 out.append(stmt)
     return out
 
+
 def main():
     ap = argparse.ArgumentParser(description="Parse Clingo (clingo 6) with Tree-Sitter and build clingo.ast nodes.")
     srcg = ap.add_mutually_exclusive_group(required=True)
@@ -392,6 +413,7 @@ def main():
     for i, stm in enumerate(ast_list, 1):
         print(f"% ---- statement {i} ----")
         print(stm)
+
 
 if __name__ == "__main__":
     main()

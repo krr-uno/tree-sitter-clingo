@@ -15,9 +15,74 @@
     }
   },
   {
+    "type": "aggregate_assignment",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "aggregate_assignment_aggregate",
+          "named": true
+        },
+        {
+          "type": "term",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "aggregate_assignment_aggregate",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "aggregate_function",
+          "named": true
+        },
+        {
+          "type": "body_aggregate_elements",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "aggregate_function",
     "named": true,
     "fields": {}
+  },
+  {
+    "type": "assignment_rule",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "aggregate_assignment",
+          "named": true
+        },
+        {
+          "type": "body",
+          "named": true
+        },
+        {
+          "type": "choice_assignment",
+          "named": true
+        },
+        {
+          "type": "simple_assignment",
+          "named": true
+        }
+      ]
+    }
   },
   {
     "type": "binary",
@@ -225,6 +290,40 @@
     "type": "boolean_constant",
     "named": true,
     "fields": {}
+  },
+  {
+    "type": "choice_assignment",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "choice_assignment_aggregate",
+          "named": true
+        },
+        {
+          "type": "term",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "choice_assignment_aggregate",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "body_aggregate_elements",
+          "named": true
+        }
+      ]
+    }
   },
   {
     "type": "comparison",
@@ -1122,6 +1221,21 @@
     }
   },
   {
+    "type": "simple_assignment",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "term",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "source_file",
     "named": true,
     "root": true,
@@ -1145,6 +1259,10 @@
       "multiple": false,
       "required": true,
       "types": [
+        {
+          "type": "assignment_rule",
+          "named": true
+        },
         {
           "type": "const",
           "named": true
@@ -2003,6 +2121,10 @@
     "named": false
   },
   {
+    "type": ":=",
+    "named": false
+  },
+  {
     "type": ":~",
     "named": false
   },
@@ -2094,6 +2216,10 @@
   {
     "type": "identifier",
     "named": true
+  },
+  {
+    "type": "in",
+    "named": false
   },
   {
     "type": "left",
