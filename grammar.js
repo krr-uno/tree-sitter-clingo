@@ -211,11 +211,14 @@ module.exports = grammar({
         ),
 
         // Note: "non-empty" and aliasable to terms
-        terms_par: $ => seq("(", optional($._terms)),
+        // terms_par: $ => seq("(", optional($._terms)),
         terms_sem: $ => seq(";", optional($._terms)),
 
         pool: $ => seq(
-            alias($.terms_par, $.terms),
+            "(",
+            alias(optional($._terms), $.terms),
+            // repeat(choice(
+            // alias($.terms_par, $.terms),
             repeat(alias($.terms_sem, $.terms)),
             ")"
         ),
@@ -241,11 +244,14 @@ module.exports = grammar({
         ),
 
         // Note: "non-empty" and aliasable to terms
-        terms_trail_par: $ => seq("(", optional($._terms_trail)),
+        // terms_trail_par: $ => seq("(", optional($._terms_trail)),
         terms_trail_sem: $ => seq(";", optional($._terms_trail)),
 
         tuple: $ => seq(
-            alias($.terms_trail_par, $.terms),
+            "(",
+            alias(optional($._terms_trail), $.terms),
+            // repeat(choice(
+            // alias($.terms_trail_par, $.terms),
             repeat(alias($.terms_trail_sem, $.terms)),
             ")"
         ),

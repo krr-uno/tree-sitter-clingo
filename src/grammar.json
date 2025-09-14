@@ -1447,27 +1447,6 @@
         }
       ]
     },
-    "terms_par": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "STRING",
-          "value": "("
-        },
-        {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "SYMBOL",
-              "name": "_terms"
-            },
-            {
-              "type": "BLANK"
-            }
-          ]
-        }
-      ]
-    },
     "terms_sem": {
       "type": "SEQ",
       "members": [
@@ -1493,10 +1472,22 @@
       "type": "SEQ",
       "members": [
         {
+          "type": "STRING",
+          "value": "("
+        },
+        {
           "type": "ALIAS",
           "content": {
-            "type": "SYMBOL",
-            "name": "terms_par"
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "_terms"
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
           },
           "named": true,
           "value": "terms"
@@ -1659,27 +1650,6 @@
         }
       ]
     },
-    "terms_trail_par": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "STRING",
-          "value": "("
-        },
-        {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "SYMBOL",
-              "name": "_terms_trail"
-            },
-            {
-              "type": "BLANK"
-            }
-          ]
-        }
-      ]
-    },
     "terms_trail_sem": {
       "type": "SEQ",
       "members": [
@@ -1705,10 +1675,22 @@
       "type": "SEQ",
       "members": [
         {
+          "type": "STRING",
+          "value": "("
+        },
+        {
           "type": "ALIAS",
           "content": {
-            "type": "SYMBOL",
-            "name": "terms_trail_par"
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "_terms_trail"
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
           },
           "named": true,
           "value": "terms"

@@ -22,10 +22,10 @@ typedef enum {
     FAIL,
 } Action;
 
+        // printf("*** Returning token: %d\n", lexer->result_symbol);
 #define EXECUTE(action) do{\
     Action result = (action);\
     if (result == RETURN_TOKEN) {\
-        printf("*** Returning token: %d\n", lexer->result_symbol);\
         return true;\
     } else if (result == FAIL) {\
         return false;\
@@ -108,7 +108,7 @@ void tree_sitter_clingo_external_scanner_deserialize(void *payload, const char *
 }
 
 void *tree_sitter_clingo_external_scanner_create() {
-     printf("External scanner created\n");
+    //  printf("External scanner created\n");
     return NULL;
 }
 
