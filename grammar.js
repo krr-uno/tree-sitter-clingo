@@ -180,21 +180,21 @@ module.exports = grammar({
         const_tuple: $ => seq(alias($.const_terms_trail, $.terms), ")"),
 
         binary: $ => choice(
-            binary_expression(8, $.term, "..", $.term),
-            binary_expression(7, $.term, "^", $.term),
-            binary_expression(6, $.term, "?", $.term),
-            binary_expression(5, $.term, "&", $.term),
-            binary_expression(4, $.term, "+", $.term),
-            binary_expression(4, $.term, "-", $.term),
-            binary_expression(3, $.term, "*", $.term),
-            binary_expression(3, $.term, "/", $.term),
-            binary_expression(3, $.term, "\\", $.term),
-            binary_expression(-2, $.term, "**", $.term),
+            binary_expression(1, $.term, "..", $.term),
+            binary_expression(2, $.term, "^", $.term),
+            binary_expression(3, $.term, "?", $.term),
+            binary_expression(4, $.term, "&", $.term),
+            binary_expression(5, $.term, "+", $.term),
+            binary_expression(5, $.term, "-", $.term),
+            binary_expression(6, $.term, "*", $.term),
+            binary_expression(6, $.term, "/", $.term),
+            binary_expression(6, $.term, "\\", $.term),
+            binary_expression(-7, $.term, "**", $.term),
         ),
 
         unary: $ => choice(
-            unary_expression(1, "-", $.term),
-            unary_expression(1, "~", $.term),
+            unary_expression(8, "-", $.term),
+            unary_expression(8, "~", $.term),
         ),
 
         abs: $ => seq(
