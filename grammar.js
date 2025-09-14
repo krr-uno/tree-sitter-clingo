@@ -14,6 +14,13 @@ const unary_expression = function (pre, op, rhs) {
 
 module.exports = grammar({
     name: 'clingo',
+
+    externals: $ => [
+        ":-",
+        ":",
+        "-",
+    ],
+
     extras: $ => [$.line_comment, $.block_comment, /\s/],
     // Note that the ambiguity between signature and term in show statements
     // does not necessarily have to be resolved in the grammar. It could also
@@ -55,13 +62,13 @@ module.exports = grammar({
         // simply workaround this issue by making classical negation part of
         // the identifier token. In practice, this should work well.
         negative_identifier: _$ => token(choice(
-            /-[ ]*n/,
-            /-[ ]*no/,
-            /-[ ]*[_']+[a-z][A-Za-z0-9_']*/,
-            /-[ ]*[a-mo-z][A-Za-z0-9_']*/,
-            /-[ ]*n[A-Za-np-z0-9_'][A-Za-z0-9_']*/,
-            /-[ ]*no[A-Za-su-z0-9_'][A-Za-z0-9_']*/,
-            /-[ ]*not[A-Za-z0-9_']+/
+            seq("-",/n/),
+            seq("-",/no/),
+            seq("-",/[_']+[a-z][A-Za-z0-9_']*/),
+            seq("-",/[a-mo-z][A-Za-z0-9_']*/),
+            seq("-",/n[A-Za-np-z0-9_'][A-Za-z0-9_']*/),
+            seq("-",/no[A-Za-su-z0-9_'][A-Za-z0-9_']*/),
+            seq("-",/not[A-Za-z0-9_']+/)
         )),
 
         // TODO: clingo does something simpler!
