@@ -131,20 +131,20 @@ module.exports = grammar({
         _const_term: $ => alias($.const_term, $.term),
 
         const_binary: $ => choice(
-            binary_expression(7, $._const_term, "^", $._const_term),
-            binary_expression(6, $._const_term, "?", $._const_term),
-            binary_expression(5, $._const_term, "&", $._const_term),
+            binary_expression(1, $._const_term, "^", $._const_term),
+            binary_expression(2, $._const_term, "?", $._const_term),
+            binary_expression(3, $._const_term, "&", $._const_term),
             binary_expression(4, $._const_term, "+", $._const_term),
             binary_expression(4, $._const_term, "-", $._const_term),
-            binary_expression(3, $._const_term, "*", $._const_term),
-            binary_expression(3, $._const_term, "/", $._const_term),
-            binary_expression(3, $._const_term, "\\", $._const_term),
-            binary_expression(-2, $._const_term, "**", $._const_term),
+            binary_expression(5, $._const_term, "*", $._const_term),
+            binary_expression(5, $._const_term, "/", $._const_term),
+            binary_expression(5, $._const_term, "\\", $._const_term),
+            binary_expression(-6, $._const_term, "**", $._const_term),
         ),
 
         const_unary: $ => choice(
-            unary_expression(1, "-", $._const_term),
-            unary_expression(1, "~", $._const_term),
+            unary_expression(7, "-", $._const_term),
+            unary_expression(7, "~", $._const_term),
         ),
 
         const_abs: $ => seq(
