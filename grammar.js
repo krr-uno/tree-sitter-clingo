@@ -20,6 +20,12 @@ module.exports = grammar({
     // be left to the user of the parser. Then, we could simply delete the
     // "show signature" part of the statement production.
     conflicts: $ => [[$.signature, $.function]],
+
+    externals: $ => [
+        ":-",
+        ":",
+    ],
+
     rules: {
         source_file: $ => repeat($.statement),
 

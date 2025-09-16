@@ -4485,7 +4485,16 @@
     ]
   ],
   "precedences": [],
-  "externals": [],
+  "externals": [
+    {
+      "type": "STRING",
+      "value": ":-"
+    },
+    {
+      "type": "STRING",
+      "value": ":"
+    }
+  ],
   "inline": [],
   "supertypes": [],
   "reserved": {}
