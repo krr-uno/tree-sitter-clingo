@@ -13,7 +13,3 @@ example*
 auto-save-list
 tramp
 .\#*
-clingo.so
-__pycache__/
-bindings/*
- 

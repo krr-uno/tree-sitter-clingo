@@ -1,0 +1,29 @@
+==================
+missing body error
+:error
+==================
+
+p :-
+q :- r.
+
+---
+
+==================
+missing body separator
+:error
+==================
+
+p :- b c.
+q :- r.
+
+---
+
+==================
+missing body dot
+:error
+==================
+
+p :- b, c, d
+q :- r.
+
+---

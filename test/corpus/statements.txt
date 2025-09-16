@@ -152,11 +152,137 @@ maximize
   (statement
     (maximize)))
 
+==================
+show
+==================
 
+#show.
+#show a/2.
+#show -a/2.
+#show a/2+1.
+#show -p(X) : q(), c(X).
+#show a.
 
+---
 
+(source_file
+  (statement
+    (show))
+  (statement
+    (show_signature
+      (signature
+        (identifier)
+        (number))))
+  (statement
+    (show_signature
+      (signature
+        (negative_identifier)
+        (number))))
+  (statement
+    (show_term
+      (term
+        (binary
+          (term
+            (function
+              (identifier)))
+          (term
+            (binary
+              (term
+                (number))
+              (term
+                (number))))))
+      (body)))
+  (statement
+    (show_term
+      (term
+        (function
+          (negative_identifier)
+          (pool
+            (terms
+              (term
+                (variable))))))
+      (body
+        (body_literal
+          (symbolic_atom
+            (identifier)
+            (pool
+              (terms))))
+        (body_literal
+          (symbolic_atom
+            (identifier)
+            (pool
+              (terms
+                (term
+                  (variable)))))))))
+  (statement
+    (show_term
+      (term
+        (function
+          (identifier)))
+      (body))))
 
+==================
+defined
+==================
 
+#defined a/2.
+#defined -a/2.
+
+---
+
+(source_file
+  (statement
+    (defined
+      (signature
+        (identifier)
+        (number))))
+  (statement
+    (defined
+      (signature
+        (negative_identifier)
+        (number)))))
+
+==================
+project
+==================
+
+#project a/2.
+#project -a/2.
+#project a.
+#project a : .
+#project a : b.
+
+---
+
+(source_file
+  (statement
+    (project_signature
+      (signature
+        (identifier)
+        (number))))
+  (statement
+    (project_signature
+      (signature
+        (negative_identifier)
+        (number))))
+  (statement
+    (project_atom
+      (symbolic_atom
+        (identifier))
+      (body)))
+  (statement
+    (project_atom
+      (symbolic_atom
+        (identifier))
+      (body)))
+  (statement
+    (project_atom
+      (symbolic_atom
+        (identifier))
+      (body
+        (body_literal
+          (symbolic_atom
+            (identifier)))))))
 
 ==================
 const
@@ -265,7 +391,54 @@ program
         (identifier)
         (identifier)))))
 
+==================
+external
+==================
 
+#external a.
+#external -a.
+#external a : b.
+#external a(X) : p(B). [X]
+
+---
+
+(source_file
+  (statement
+    (external
+      (symbolic_atom
+        (identifier))
+      (body)))
+  (statement
+    (external
+      (symbolic_atom
+        (negative_identifier))
+      (body)))
+  (statement
+    (external
+      (symbolic_atom
+        (identifier))
+      (body
+        (body_literal
+          (symbolic_atom
+            (identifier))))))
+  (statement
+    (external
+      (symbolic_atom
+        (identifier)
+        (pool
+          (terms
+            (term
+              (variable)))))
+      (body
+        (body_literal
+          (symbolic_atom
+            (identifier)
+            (pool
+              (terms
+                (term
+                  (variable)))))))
+      (term
+        (variable)))))
 
 ==================
 edge

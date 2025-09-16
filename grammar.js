@@ -14,19 +14,18 @@ const unary_expression = function (pre, op, rhs) {
 
 module.exports = grammar({
     name: 'clingo',
-
-    externals: $ => [
-        ":-",
-        ":",
-        "-",
-    ],
-
     extras: $ => [$.line_comment, $.block_comment, /\s/],
     // Note that the ambiguity between signature and term in show statements
     // does not necessarily have to be resolved in the grammar. It could also
     // be left to the user of the parser. Then, we could simply delete the
     // "show signature" part of the statement production.
     conflicts: $ => [[$.signature, $.function]],
+
+    externals: $ => [
+        ":-",
+        ":",
+    ],
+
     rules: {
         source_file: $ => repeat($.statement),
 
@@ -62,13 +61,13 @@ module.exports = grammar({
         // simply workaround this issue by making classical negation part of
         // the identifier token. In practice, this should work well.
         negative_identifier: _$ => token(choice(
-            seq("-",/n/),
-            seq("-",/no/),
-            seq("-",/[_']+[a-z][A-Za-z0-9_']*/),
-            seq("-",/[a-mo-z][A-Za-z0-9_']*/),
-            seq("-",/n[A-Za-np-z0-9_'][A-Za-z0-9_']*/),
-            seq("-",/no[A-Za-su-z0-9_'][A-Za-z0-9_']*/),
-            seq("-",/not[A-Za-z0-9_']+/)
+            /-[ ]*n/,
+            /-[ ]*no/,
+            /-[ ]*[_']+[a-z][A-Za-z0-9_']*/,
+            /-[ ]*[a-mo-z][A-Za-z0-9_']*/,
+            /-[ ]*n[A-Za-np-z0-9_'][A-Za-z0-9_']*/,
+            /-[ ]*no[A-Za-su-z0-9_'][A-Za-z0-9_']*/,
+            /-[ ]*not[A-Za-z0-9_']+/
         )),
 
         // TODO: clingo does something simpler!
@@ -131,20 +130,20 @@ module.exports = grammar({
         _const_term: $ => alias($.const_term, $.term),
 
         const_binary: $ => choice(
-            binary_expression(1, $._const_term, "^", $._const_term),
-            binary_expression(2, $._const_term, "?", $._const_term),
-            binary_expression(3, $._const_term, "&", $._const_term),
+            binary_expression(7, $._const_term, "^", $._const_term),
+            binary_expression(6, $._const_term, "?", $._const_term),
+            binary_expression(5, $._const_term, "&", $._const_term),
             binary_expression(4, $._const_term, "+", $._const_term),
             binary_expression(4, $._const_term, "-", $._const_term),
-            binary_expression(5, $._const_term, "*", $._const_term),
-            binary_expression(5, $._const_term, "/", $._const_term),
-            binary_expression(5, $._const_term, "\\", $._const_term),
-            binary_expression(-6, $._const_term, "**", $._const_term),
+            binary_expression(3, $._const_term, "*", $._const_term),
+            binary_expression(3, $._const_term, "/", $._const_term),
+            binary_expression(3, $._const_term, "\\", $._const_term),
+            binary_expression(-2, $._const_term, "**", $._const_term),
         ),
 
         const_unary: $ => choice(
-            unary_expression(7, "-", $._const_term),
-            unary_expression(7, "~", $._const_term),
+            unary_expression(1, "-", $._const_term),
+            unary_expression(1, "~", $._const_term),
         ),
 
         const_abs: $ => seq(
@@ -180,21 +179,21 @@ module.exports = grammar({
         const_tuple: $ => seq(alias($.const_terms_trail, $.terms), ")"),
 
         binary: $ => choice(
-            binary_expression(1, $.term, "..", $.term),
-            binary_expression(2, $.term, "^", $.term),
-            binary_expression(3, $.term, "?", $.term),
-            binary_expression(4, $.term, "&", $.term),
-            binary_expression(5, $.term, "+", $.term),
-            binary_expression(5, $.term, "-", $.term),
-            binary_expression(6, $.term, "*", $.term),
-            binary_expression(6, $.term, "/", $.term),
-            binary_expression(6, $.term, "\\", $.term),
-            binary_expression(-7, $.term, "**", $.term),
+            binary_expression(8, $.term, "..", $.term),
+            binary_expression(7, $.term, "^", $.term),
+            binary_expression(6, $.term, "?", $.term),
+            binary_expression(5, $.term, "&", $.term),
+            binary_expression(4, $.term, "+", $.term),
+            binary_expression(4, $.term, "-", $.term),
+            binary_expression(3, $.term, "*", $.term),
+            binary_expression(3, $.term, "/", $.term),
+            binary_expression(3, $.term, "\\", $.term),
+            binary_expression(-2, $.term, "**", $.term),
         ),
 
         unary: $ => choice(
-            unary_expression(8, "-", $.term),
-            unary_expression(8, "~", $.term),
+            unary_expression(1, "-", $.term),
+            unary_expression(1, "~", $.term),
         ),
 
         abs: $ => seq(
@@ -211,14 +210,11 @@ module.exports = grammar({
         ),
 
         // Note: "non-empty" and aliasable to terms
-        // terms_par: $ => seq("(", optional($._terms)),
+        terms_par: $ => seq("(", optional($._terms)),
         terms_sem: $ => seq(";", optional($._terms)),
 
         pool: $ => seq(
-            "(",
-            alias(optional($._terms), $.terms),
-            // repeat(choice(
-            // alias($.terms_par, $.terms),
+            alias($.terms_par, $.terms),
             repeat(alias($.terms_sem, $.terms)),
             ")"
         ),
@@ -244,14 +240,11 @@ module.exports = grammar({
         ),
 
         // Note: "non-empty" and aliasable to terms
-        // terms_trail_par: $ => seq("(", optional($._terms_trail)),
+        terms_trail_par: $ => seq("(", optional($._terms_trail)),
         terms_trail_sem: $ => seq(";", optional($._terms_trail)),
 
         tuple: $ => seq(
-            "(",
-            alias(optional($._terms_trail), $.terms),
-            // repeat(choice(
-            // alias($.terms_trail_par, $.terms),
+            alias($.terms_trail_par, $.terms),
             repeat(alias($.terms_trail_sem, $.terms)),
             ")"
         ),
@@ -550,17 +543,6 @@ module.exports = grammar({
 
         theory: $ => seq("#theory", $.identifier, "{", optional($._theory_definitions), "}", "."),
 
-        aggregate_assignment_aggregate: $ => seq($.aggregate_function, "{", optional($.body_aggregate_elements), "}"),
-        choice_assignment_aggregate: $ => seq("{", $.body_aggregate_elements, "}"),
-
-        simple_assignment: $ => seq($.term, ":=", $.term),
-        aggregate_assignment: $ => seq($.term, ":=", $.aggregate_assignment_aggregate),
-        choice_assignment: $ => seq($.term, "in", $.choice_assignment_aggregate),
-
-        _head_assignment: $ => choice($.simple_assignment, $.aggregate_assignment, $.choice_assignment),
-
-        assignment_rule: $ => seq($._head_assignment, choice(".", seq(":-", $.body))),
-
         statement: $ => choice(
             $.rule,
             $.integrity_constraint,
@@ -580,8 +562,7 @@ module.exports = grammar({
             $.include,
             $.program,
             $.external,
-            $.theory,
-            $.assignment_rule,
+            $.theory
         ),
     }
 });
