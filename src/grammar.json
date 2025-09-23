@@ -384,7 +384,7 @@
       "members": [
         {
           "type": "PREC_LEFT",
-          "value": 7,
+          "value": 1,
           "content": {
             "type": "SEQ",
             "members": [
@@ -417,7 +417,7 @@
         },
         {
           "type": "PREC_LEFT",
-          "value": 6,
+          "value": 2,
           "content": {
             "type": "SEQ",
             "members": [
@@ -450,7 +450,7 @@
         },
         {
           "type": "PREC_LEFT",
-          "value": 5,
+          "value": 3,
           "content": {
             "type": "SEQ",
             "members": [
@@ -549,7 +549,7 @@
         },
         {
           "type": "PREC_LEFT",
-          "value": 3,
+          "value": 5,
           "content": {
             "type": "SEQ",
             "members": [
@@ -582,7 +582,7 @@
         },
         {
           "type": "PREC_LEFT",
-          "value": 3,
+          "value": 5,
           "content": {
             "type": "SEQ",
             "members": [
@@ -615,7 +615,7 @@
         },
         {
           "type": "PREC_LEFT",
-          "value": 3,
+          "value": 5,
           "content": {
             "type": "SEQ",
             "members": [
@@ -648,7 +648,7 @@
         },
         {
           "type": "PREC_RIGHT",
-          "value": 2,
+          "value": 6,
           "content": {
             "type": "SEQ",
             "members": [
@@ -686,7 +686,7 @@
       "members": [
         {
           "type": "PREC_LEFT",
-          "value": 1,
+          "value": 7,
           "content": {
             "type": "SEQ",
             "members": [
@@ -711,7 +711,7 @@
         },
         {
           "type": "PREC_LEFT",
-          "value": 1,
+          "value": 7,
           "content": {
             "type": "SEQ",
             "members": [
@@ -937,7 +937,7 @@
       "members": [
         {
           "type": "PREC_LEFT",
-          "value": 8,
+          "value": 1,
           "content": {
             "type": "SEQ",
             "members": [
@@ -970,7 +970,7 @@
         },
         {
           "type": "PREC_LEFT",
-          "value": 7,
+          "value": 2,
           "content": {
             "type": "SEQ",
             "members": [
@@ -1003,7 +1003,7 @@
         },
         {
           "type": "PREC_LEFT",
-          "value": 6,
+          "value": 3,
           "content": {
             "type": "SEQ",
             "members": [
@@ -1036,7 +1036,7 @@
         },
         {
           "type": "PREC_LEFT",
-          "value": 5,
+          "value": 4,
           "content": {
             "type": "SEQ",
             "members": [
@@ -1069,7 +1069,7 @@
         },
         {
           "type": "PREC_LEFT",
-          "value": 4,
+          "value": 5,
           "content": {
             "type": "SEQ",
             "members": [
@@ -1102,7 +1102,7 @@
         },
         {
           "type": "PREC_LEFT",
-          "value": 4,
+          "value": 5,
           "content": {
             "type": "SEQ",
             "members": [
@@ -1135,7 +1135,7 @@
         },
         {
           "type": "PREC_LEFT",
-          "value": 3,
+          "value": 6,
           "content": {
             "type": "SEQ",
             "members": [
@@ -1168,7 +1168,7 @@
         },
         {
           "type": "PREC_LEFT",
-          "value": 3,
+          "value": 6,
           "content": {
             "type": "SEQ",
             "members": [
@@ -1201,7 +1201,7 @@
         },
         {
           "type": "PREC_LEFT",
-          "value": 3,
+          "value": 6,
           "content": {
             "type": "SEQ",
             "members": [
@@ -1234,7 +1234,7 @@
         },
         {
           "type": "PREC_RIGHT",
-          "value": 2,
+          "value": 7,
           "content": {
             "type": "SEQ",
             "members": [
@@ -1272,7 +1272,7 @@
       "members": [
         {
           "type": "PREC_LEFT",
-          "value": 1,
+          "value": 8,
           "content": {
             "type": "SEQ",
             "members": [
@@ -1297,7 +1297,7 @@
         },
         {
           "type": "PREC_LEFT",
-          "value": 1,
+          "value": 8,
           "content": {
             "type": "SEQ",
             "members": [

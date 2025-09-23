@@ -163,29 +163,29 @@ p(1+2*3-4).
 
 ---
 
-(source_file
-  (statement
-    (rule
-      (head
-        (literal
-          (symbolic_atom
-            (identifier)
-            (pool
-              (terms
-                (term
-                  (binary
-                    (term
-                      (binary
-                        (term
-                          (number))
-                        (term
-                          (number))))
-                    (term
-                      (binary
-                        (term
-                          (number))
-                        (term
-                          (number))))))))))))))
+  (source_file
+    (statement
+      (rule
+        (head
+          (literal
+            (symbolic_atom
+              (identifier)
+              (pool
+                (terms
+                  (term
+                    (binary
+                      (term
+                        (binary
+                          (term
+                            (number))
+                          (term
+                            (binary
+                              (term
+                                (number))
+                              (term
+                                (number))))))
+                      (term
+                        (number))))))))))))
 
 ==================
 function
